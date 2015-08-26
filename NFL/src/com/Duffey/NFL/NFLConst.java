@@ -24,6 +24,8 @@ public class NFLConst {
 	public static final int REMEMBER_EXPIRES = REMEMBER_EXPIRES_DAYS * REMEMBER_EXPIRES_HOURS * REMEMBER_EXPIRES_MINUTES * REMEMBER_EXPIRES_SECONDS; // In seconds, value = # days * 24 hours * 60 minutes * 60 seconds
 	public static final String FORM_USER = "mrcuser";
 	public static final String FORM_PASSWORD = "mrcpswd";
+	public static final String USER_NOT_ACTIVATED = "Sign in failed.  You have not activated your account yet.  Please follow the link in your activation email, or click <a href=\"NFL.R00030s\">here</a> to have the activation email resent.";
+	public static final String USER_NOT_FOUND = "Username does not exist.  Please double check the spelling, or register <a href=\"NFL.M00010s?action_mode=add\">here</a> if you have not already done so.";
 
 	// Miscellaneous
 	public static final String SEP = File.separator;

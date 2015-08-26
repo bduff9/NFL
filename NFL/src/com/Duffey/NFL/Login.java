@@ -1,9 +1,12 @@
 package com.Duffey.NFL;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 
 import javax.servlet.ServletContext;
@@ -14,18 +17,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mrc.dbo.MrcConnection;
 import com.mrc.http.Constants;
 import com.mrc.http.Util;
 import com.mrc.http.Visitor;
-import com.mrc.http.security.IValidation;
 import com.mrc.http.security.LoginConfig;
-import com.mrc.http.security.ValidatorStore;
 import com.mrc.util.Utils;
 
 import mrc.CustomLoginInterface;
@@ -45,10 +46,12 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 	 ***********************************************************************/
 	public void check(HttpServletRequest req, HttpServletResponse res, String lib, ServletContext context)
 			throws ServletException, IOException {
+		
+		PageData page = new PageData();	
 
-		String action = req.getParameter("signoff");
-		if (action != null && action.equals("1")) {
-			signoff(req, res);
+		String action = req.getParameter("action");
+		if (action != null) {
+			signoff(req, res, action, page, context);
 			return; // Signoff done, return
 		}
 
@@ -60,7 +63,6 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 			visitor = new Visitor(req); 
 		}  
 
-		PageData page = new PageData();	
 		page.setFormData(req);
 
 		log.info("sessionId=" + ses.getId());
@@ -92,14 +94,9 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 
 		if (page.getMrcuser() != null && page.getMrcpswd() != null) {
 
+			String msg = null;
 			LoginConfig config = visitor.getLoginConfig();
-			String ds = config.datasource;
-			String qtable = config.validate_table;
-			String colUser = config.validate_coluser;
-			String colPswd = config.validate_colpswd;
-			String sha = config.validate_encryption_type;
-			IValidation validator = ValidatorStore.getTableValidator(ds, qtable, colUser, colPswd, sha);
-			String msg = validator.validateUser(page.getMrcuser(), page.getMrcpswd(), config.input_idcase.equals("1"), config.input_pwcase.equals("1"));
+			msg = validateUser(config, page);
 
 			ses.setAttribute(NFLConst.SESSION_USER, page.getMrcuser());
 			ses.setAttribute(NFLConst.SESSION_LIB, lib);
@@ -108,11 +105,8 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 			if (msg != null) {
 				page.reset(req);	
 				page.setMessage(msg);
-				HashMap<String, String> resMap = new HashMap<String, String>();
-				resMap.put("error", msg);
-				Gson gson = new Gson();
-				String jsonStr = gson.toJson(resMap);
-				sendJSON(jsonStr, lib, res, req);
+				String tplStr = page.makePage(req, res, page, visitor, lib, NFLConst.LOGIN_SKELETON, context);
+				sendPage(tplStr, lib, res, req);
 				return; 
 			}			
 
@@ -134,29 +128,60 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 			page.init(req);
 			log.info("sessionId=" + ses.getId()  + ",  visitor=" + visitor);
 
-			String signOnHTML = getSignon(lib, req);
-			//signOnHTML = OfflineResources.parseMainSection(signOnHTML).replace("{{mrcuser}}", page.getMrcuser()).replace("{{tries}}", "" + page.getTries());
-			HashMap<String, String> resMap = new HashMap<String, String>();
-			resMap.put("signOn", signOnHTML);
-			Gson gson = new Gson();
-			String jsonStr = gson.toJson(resMap);
-			sendJSON(jsonStr, lib, res, req);
-
 		}
 
+		String tplStr = page.makePage(req, res, page, visitor, lib, NFLConst.LOGIN_SKELETON, context);
+		sendPage(tplStr, lib, res, req);
 	}
 
-	private String getSignon(String lib, HttpServletRequest req) {
-		String sep = NFLConst.SEP;
-		ServletContext cntxt = req.getServletContext();
-		String signOnPath = cntxt.getRealPath(sep + "WEB-INF" + sep + "classes" + sep + lib + sep + NFLConst.LOGIN_SKELETON);
-		File f = new File(signOnPath);
+	private String validateUser(LoginConfig config, PageData page) {
+		String ds = config.datasource;
+		String qtable = config.validate_table;
+		String colUser = config.validate_coluser;
+		String colPswd = config.validate_colpswd;
+
+		Connection conn = null;
 		try {
-			return FileUtils.readFileToString(f);
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			return null;
+			conn = MrcConnection.getConnection(ds);
+		} catch (SQLException e) {
+			log.error(e);
+			e.printStackTrace();
+			return e.getMessage();
 		}
+
+		String msg = null;
+
+		String userCond = colUser + " = ?";
+		//String pswdCond =  colPswd + " = ?";
+
+		String sql = "select " + colUser + ", " + colPswd + " from " 
+				+ qtable + " where " + userCond;// + " and " + pswdCond;
+
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, page.getMrcuser()); 
+			//pstmt.setString( 2, page.getMrcpswd()); // Should always be Y
+			ResultSet rs = pstmt.executeQuery();
+
+			if (!rs.next()) {
+				msg = NFLConst.USER_NOT_FOUND;
+			} else if (!rs.getString(2).equals("Y")) {
+				msg = NFLConst.USER_NOT_ACTIVATED;
+			}
+		} catch (SQLException e) {
+			msg = e.getMessage();
+			log.error(e);
+		}  finally {
+			try {
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (Exception e) {
+				log.error(e);
+			}
+		}
+
+		return msg;
 	}
 
 	/*********************************************************************
@@ -190,26 +215,25 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 	}
 
 	/*********************************************************************
-	 * Send JSON Response  
+	 * Send page  
 	 *********************************************************************/
-	private void sendJSON(String jsonStr, String lib, HttpServletResponse res, HttpServletRequest req) {	
+	private void sendPage(String tplStr, String lib, HttpServletResponse res, HttpServletRequest req) {	
+		res.setContentType("text/html; charset=utf-8");
 		try {
-			res.setContentType("text/json; charset=utf-8");
-			res.setStatus(HttpServletResponse.SC_OK);
-
-			PrintWriter writer = res.getWriter();
-			writer.print(jsonStr);
-			writer.flush();
+			PrintWriter out = res.getWriter();
+			if (LoginFilter.USE_FILTER && lib != null && lib.trim().length() > 0) {
+				tplStr = StringUtils.replace(tplStr, "mrc.Login", lib + ".Login");
+			}
+			out.println(tplStr);
 		} catch (IOException e) {
 			log.error(e);
-			res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	/***************************************************************************
-	 * Signoff.
+	 * Signoff
 	 **************************************************************************/
-	private void signoff(HttpServletRequest req, HttpServletResponse res) {
+	private void signoff(HttpServletRequest req, HttpServletResponse res, String action, PageData page, ServletContext context) {
 		HttpSession ses = req.getSession();
 		if (ses.isNew()) {
 			log.info("Session is new. Skipping signoff...");
@@ -226,14 +250,32 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 		log.info(visitor.getLoginUser() + " is logging out, invalidating session...");
 		ses.invalidate();
 
-		String signoffUrl = visitor.getLoginConfig().signoffPage;
-		log.info("Successfully signed off, redirecting to :" + signoffUrl);
-		if (signoffUrl != null && signoffUrl.trim().length() > 0) {
-			try {
-				res.sendRedirect(res.encodeRedirectURL(signoffUrl));
-			} catch (Exception e) {
-				log.error(e);
-			}		
+		if (action.equals("1")) { // regular sign off
+			String signoffUrl = visitor.getLoginConfig().signoffPage;
+			log.info("Successfully signed off, redirecting to :" + signoffUrl);
+			if (signoffUrl != null && signoffUrl.trim().length() > 0) {
+				try {
+					res.sendRedirect(res.encodeRedirectURL(signoffUrl));
+				} catch (Exception e) {
+					log.error(e);
+				}		
+			}
+		} else { // Switching users
+			Cookie[] cookies = req.getCookies();
+			if (cookies != null) {
+				for (int i = 0; i < cookies.length; i++) {
+					Cookie cookie = cookies[i];
+					String cookieName = cookie.getName().toLowerCase();
+					if (cookieName.equals(NFLConst.MRC_TOKEN.toLowerCase())) {
+						cookie.setMaxAge(0);
+						cookie.setValue(null);
+						res.addCookie(cookie);
+						break;
+					}
+				}
+			}
+			String tplStr = page.makePage(req, res, page, visitor, lib, NFLConst.LOGIN_SKELETON, context);
+			sendPage(tplStr, lib, res, req);
 		}
 	}
 
