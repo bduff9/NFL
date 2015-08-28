@@ -46,7 +46,7 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 	 ***********************************************************************/
 	public void check(HttpServletRequest req, HttpServletResponse res, String lib, ServletContext context)
 			throws ServletException, IOException {
-		
+
 		PageData page = new PageData();	
 
 		String action = req.getParameter("action");
@@ -132,6 +132,25 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 
 		String tplStr = page.makePage(req, res, page, visitor, lib, NFLConst.LOGIN_SKELETON, context);
 		sendPage(tplStr, lib, res, req);
+	}
+
+	public String checkForRESTful(HttpServletRequest req, HttpServletResponse res, String lib, ServletContext context)
+			throws ServletException, IOException {
+		String msg = null;
+		
+		PageData page = new PageData();	
+		page.setFormData(req);
+		
+		HttpSession ses = req.getSession();
+		Visitor visitor = (Visitor) ses.getAttribute(lib + Constants.SES_KEY_VISITOR);
+		if (visitor == null ) {
+			visitor = new Visitor(req); 
+		}  
+		
+		LoginConfig config = visitor.getLoginConfig();
+		msg = validateUser(config, page);
+		
+		return msg;
 	}
 
 	private String validateUser(LoginConfig config, PageData page) {
