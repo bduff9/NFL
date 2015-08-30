@@ -130,8 +130,10 @@ public class UpdateTeamInfo {
 					}
 				}
 			}
-			uSql.add("UPDATE NFL.TEAMS SET CITY = 'Tie', NAME = '', SHORT = 'TIE', ALTSHORT = '', DIVNAME = 'AFC', DIVDIR = 'North', RANK = 0, LOGO = '', LOGOSM = '', COLOR = '', COLOR2 = '' WHERE TEAMID = 33");
-			iSql.add("INSERT INTO NFL.TEAMS (TEAMID, CITY, NAME, SHORT, ALTSHORT, DIVNAME, DIVDIR, RANK, LOGO, LOGOSM, COLOR, COLOR2) VALUES (33, 'Tie', '', 'TIE', '', 'AFC', 'North', 0, '', '', '', '')");
+			uSql.add("UPDATE NFL.TEAMS SET CITY = 'Tie', NAME = '', SHORT = 'TIE', ALTSHORT = 'TIE', DIVNAME = 'AFC', DIVDIR = 'North', RANK = 0, LOGO = '', LOGOSM = '', COLOR = '', COLOR2 = '' WHERE TEAMID = 33");
+			iSql.add("INSERT INTO NFL.TEAMS (TEAMID, CITY, NAME, SHORT, ALTSHORT, DIVNAME, DIVDIR, RANK, LOGO, LOGOSM, COLOR, COLOR2) VALUES (33, 'Tie', '', 'TIE', 'TIE', 'AFC', 'North', 0, '', '', '', '')");
+			uSql.add("UPDATE NFL.TEAMS SET CITY = 'Bonus', NAME = 'Points', SHORT = 'BON', ALTSHORT = 'BON', DIVNAME = 'NFC', DIVDIR = 'West', RANK = 0, LOGO = '', LOGOSM = '', COLOR = '', COLOR2 = '' WHERE TEAMID = 34");
+			iSql.add("INSERT INTO NFL.TEAMS (TEAMID, CITY, NAME, SHORT, ALTSHORT, DIVNAME, DIVDIR, RANK, LOGO, LOGOSM, COLOR, COLOR2) VALUES (34, 'Bonus', 'Points', 'BON', 'BON', 'NFC', 'West', 0, '', '', '', '')");
 			Calendar c = Calendar.getInstance();
 			c.add(Calendar.MONTH, -2);
 			int year = c.get(Calendar.YEAR);
@@ -173,7 +175,7 @@ public class UpdateTeamInfo {
 				String sql = "";
 				try {
 					// Get connection configured in m-power/mrcjava/web-inf/classes/spring-config.xml
-					conn = MrcConnection.getConnection("mysql_nfl");
+					conn = MrcConnection.getConnection("mysql_nfl_prod");
 					Statement stmt = conn.createStatement();
 					for (int s = 0; s < uSql.size(); s++) {
 						sql = uSql.get(s);

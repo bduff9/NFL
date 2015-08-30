@@ -18,8 +18,8 @@ import java.util.*;
 public class InitPool{
 
 	// Update the following when ready
-	private static final int seasonYear = 2015;
-	private static final String source = "mysql_nfl_dev";
+	private static final int seasonYear = 2016;
+	public static final String source = "mysql_nfl_dev";
 	//private static final String source = "mysql_nfl_prod";
 
 	public static void main (String argv []){
