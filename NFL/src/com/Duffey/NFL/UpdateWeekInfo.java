@@ -162,6 +162,12 @@ public class UpdateWeekInfo{
 					week--;
 				}
 				Statement stmt = conn.createStatement();
+				// Reset survivor picks for dead players
+				usql = "update NFL.SURVIVOR A"
+						+ " join (select B.WEEK as WEEK, B.USERID as USERID from NFL.SURVIVOR B join NFL.GAMES C on B.GAMEID = C.GAMEID where C.WINNER is not null and B.PICK <> C.WINNER) D on A.USERID = D.USERID and A.WEEK > D.WEEK"
+						+ " set A.GAMEID = null, A.PICK = null";
+				int updated = stmt.executeUpdate(usql);
+				log.info(usql + " updated " + updated + " rows");
 				for (int wk = week; wk > 0; wk--) {
 					usql = "SELECT A.USERID, SUM(A.POINTS), SUM(1), max(D.LASTSCORE) - max(C.SCORE) FROM NFL.PICKS A INNER JOIN NFL.GAMES B ON A.PICK = B.WINNER AND A.GAMEID = B.GAMEID"
 							+ " LEFT OUTER JOIN NFL.TIEBREAKER C ON A.USERID = C.USERID AND B.WEEK = C.WEEK LEFT OUTER JOIN NFL.WEEKINFO D ON B.WEEK = D.WEEK"
@@ -196,7 +202,7 @@ public class UpdateWeekInfo{
 					}
 					for (int x = 0; x < ps.size(); x++) {
 						usql = "UPDATE NFL.TIEBREAKER SET DUMMY = '999' WHERE USERID = '" + ps.get(x).getName() + "' AND WEEK = " + wk;
-						int updated = stmt.executeUpdate(usql);
+						updated = stmt.executeUpdate(usql);
 						log.info(usql + " updated " + updated + " rows");
 					}
 				}
