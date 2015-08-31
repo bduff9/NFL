@@ -38,7 +38,7 @@ public class Encryption {
 		System.out.println("Original value is " + test);
 		String encrypted = encrypt(test);
 		System.out.println("Encrypted value is " + encrypted);
-		String decrypted = decrypt(encrypted);
+		String decrypted = decrypt("Qyg4BTnxM+OPF689ni6Gk6UXnA2YMeT4JFnYDzHfz+e4zAnEpD3ly/nXWBDoGIMk");
 		System.out.println("Decrypted value is " + decrypted);
 	}
 

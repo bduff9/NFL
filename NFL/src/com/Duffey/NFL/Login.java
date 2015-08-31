@@ -90,6 +90,8 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 			} catch (Exception e) {
 				log.error("Failed to load mrctoken.  mrctoken=" + appCredentials + ", error=" + e);
 			}
+		} else {
+			log.info("No saved credentials found in cookie " + NFLConst.MRC_TOKEN);
 		}
 
 		if (page.getMrcuser() != null && page.getMrcpswd() != null) {
@@ -263,7 +265,7 @@ public class Login extends HttpServlet implements CustomLoginInterface {
 		Visitor visitor = (Visitor) ses.getAttribute(lib + Constants.SES_KEY_VISITOR);
 		if (visitor == null || visitor.getLoginUser() == null) {
 			log.info("User is null, lib=" + lib + ", skipping signoff...");
-			return;
+			//return;
 		}
 
 		log.info(visitor.getLoginUser() + " is logging out, invalidating session...");
