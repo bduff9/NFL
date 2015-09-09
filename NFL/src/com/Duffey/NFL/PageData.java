@@ -96,6 +96,7 @@ public class PageData {
 
 		//2011-02-21:add client info for alter skeleton
 		ClientInfo client = new ClientInfo();
+		client.setContext(context);
 		HttpSession ses = req.getSession();
 		MobileConfig mobileConf0 = (MobileConfig) ses.getAttribute(Constants.SES_KEY_MOBILE_CONF);
 		client.setInfo(req, mobileConf0);
