@@ -27,9 +27,9 @@ public class ParsePickHTML {
 			String pick = pickSpans.get(p).text();
 			//System.out.println(pick);
 			week = (pick.matches("\\.Wk.(\\d{1,2}).") ? Integer.parseInt(pick.replaceAll("\\.Wk.(\\d{1,2}).", "$1")) : week);
-			if (pick.matches("\\.\\d{1,2}[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,2}\\S{2,3}.*")) {
-				String team = pick.replaceAll("\\.\\d{1,2}[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,2}(\\S{2,3}).*", "$1").trim();
-				int points = Integer.parseInt(pick.replaceAll("\\.(\\d{1,2})[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,2}\\S{2,3}.*", "$1"));
+			if (pick.matches("\\.\\d{1,2}[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,3}\\S{2,3}.*")) {
+				String team = pick.replaceAll("\\.\\d{1,2}[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,3}(\\S{2,3}).*", "$1").trim();
+				int points = Integer.parseInt(pick.replaceAll("\\.(\\d{1,2})[^A-Za-z0-9]{1,2}-[^A-Za-z]{1,3}\\S{2,3}.*", "$1"));
 				//System.out.println(points + " - " + team);
 				// Search list for team
 				int inList = -1;
@@ -56,12 +56,12 @@ public class ParsePickHTML {
 			}
 		}
 		Collections.sort(allPicks, new Comparator<String[]> () {
-		    @Override
+			@Override
 			public int compare(String[] a, String[] b) {
-		    	int picksA = Integer.parseInt(a[2]);
-    			int picksB = Integer.parseInt(b[2]);
-		    	int pointsA = Integer.parseInt(a[1]);
-		    	int pointsB = Integer.parseInt(b[1]);
+				int picksA = Integer.parseInt(a[2]);
+				int picksB = Integer.parseInt(b[2]);
+				int pointsA = Integer.parseInt(a[1]);
+				int pointsB = Integer.parseInt(b[1]);
 				if (picksA < picksB) {
 					return 1;
 				} else if (picksA > picksB) {
@@ -77,10 +77,10 @@ public class ParsePickHTML {
 		System.out.println(picks + " total picks in week " + week + " for " + games + " total games");
 		for (String[] teamStat : allPicks) {
 			System.out.println(games-- + ". " + teamStat[0] + " - " + teamStat[1] + " points by " + teamStat[2] + " people");
-			if (games == 0) {
+			if (games == -1) {
 				break;
 			}
 		}
 	}
-	
+
 }
