@@ -113,7 +113,7 @@ public class UpdateWeekInfo{
 						sql.add("UPDATE NFL.GAMES SET WINNER = " + winner + ", "
 								+ "STATUS = '" + status + "', "
 								+ "HSCORE = " + homeScore + ", "
-								+ "VSCORE = " + visitingScore + "', "
+								+ "VSCORE = " + visitingScore + ", "
 								+ "TIMELEFT = " + remaining + ", "
 								+ "HASPOSS = " + hasPoss + ", "
 								+ "REDZONE = " + inRedZone + " "
