@@ -58,25 +58,38 @@ public class ParsePickHTML {
 		Collections.sort(allPicks, new Comparator<String[]> () {
 			@Override
 			public int compare(String[] a, String[] b) {
-				int picksA = Integer.parseInt(a[2]);
-				int picksB = Integer.parseInt(b[2]);
-				int pointsA = Integer.parseInt(a[1]);
-				int pointsB = Integer.parseInt(b[1]);
+				double picksA = Integer.parseInt(a[2]),
+						picksB = Integer.parseInt(b[2]),
+						pointsA = Integer.parseInt(a[1]),
+						pointsB = Integer.parseInt(b[1]),
+						avgA = pointsA / picksA,
+						avgB = pointsB / picksB;
+				
 				if (picksA < picksB) {
 					return 1;
 				} else if (picksA > picksB) {
 					return -1;
+				} else if (avgA < avgB) {
+					return 1;
+				} else if (avgA > avgB) {
+					return -1;
 				} else if (pointsA < pointsB) {
 					return 1;
-				} else {
+				} else if (pointsA > pointsB) {
 					return -1;
 				}
+				return 0;
 			}
 		});
+		
 		int games = picks / 4;
 		System.out.println(picks + " total picks in week " + week + " for " + games + " total games");
 		for (String[] teamStat : allPicks) {
-			System.out.println(games-- + ". " + teamStat[0] + " - " + teamStat[1] + " points by " + teamStat[2] + " people");
+			String team = teamStat[0];
+			double points = Double.parseDouble(teamStat[1]),
+					people = Double.parseDouble(teamStat[2]),
+					avg = points / people;
+			System.out.println(games-- + ". " + team + " - " + (int) points + " points by " + (int) people + " people for an average of " + avg + " points per person");
 			if (games == -1) {
 				break;
 			}
