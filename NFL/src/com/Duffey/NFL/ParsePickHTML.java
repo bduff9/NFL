@@ -119,7 +119,7 @@ public class ParsePickHTML {
 
 			if (gameCt == 0) System.out.println("---------------------------------------------------------------------------------------");
 
-			System.out.println(String.format("%2d", gameCt--) + ". " + team + " - " + pt.intValue() + " points by " + ct.intValue() + " people for an average of " + avg + " points per person");
+			System.out.println(String.format("%2d", gameCt--) + ". " + String.format("%3s",team) + " - " + String.format("%2d", pt.intValue()) + " points by " + ct.intValue() + " people for an average of " + String.format("%5.2f", (Math.round(avg * 100.0) / 100.0)) + " points per person");
 
 			if (gameCt == -1) break;
 		}
